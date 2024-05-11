@@ -28,7 +28,7 @@
    http://localhost:3000
    ```
 
-# REST API - CRUD операции
+# REST API - CRUD operations
 
 - `POST http://localhost:3000/token` – Creates credit card token is valid for 20 minutes.
 - `POST http://localhost:3000/status` – Process a payment.
