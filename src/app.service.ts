@@ -67,6 +67,7 @@ export class AppService {
   async createSignature(request: any, keyHex: string) {
     const values = Object.values(request);
     const hmacData = values.sort().join('|');
+    console.log(hmacData);
     const hmacKey = Buffer.from(keyHex, 'hex');
     const hmacObj = crypto.createHmac('sha256', hmacKey);
     hmacObj.update(hmacData);
@@ -89,12 +90,11 @@ export class AppService {
         user_contact_email: this.#email,
         ip: '1.1.1.1',
         result_url: this.#result_url,
-        success_url: this.#result_url,
+        success_url: `https://example.com/success`,
         failure_url: this.#result_url,
       };
 
       data.signature = await this.createSignature(data, this.#secret);
-      console.log(data);
 
       const config = {
         method: 'post',
@@ -105,9 +105,9 @@ export class AppService {
       };
 
       const payment_id = await axios(config)
-        .then(function (response) {
-          console.log(JSON.stringify(response.data));
-          return response.data.payment_id;
+        .then(async (data$) => {
+          console.log(data$.data);
+          return data$.data.payment_id;
         })
         .catch(function (error) {
           console.log(error.response.data);
@@ -122,8 +122,8 @@ export class AppService {
     }
   }
 
-  async getStatusTransaction() {
-    const payment_id = this.#payment_id;
+  async getStatusTransaction(paymentId?: string, secret?: string) {
+    const payment_id = paymentId ?? this.#payment_id;
 
     console.log(payment_id);
 
