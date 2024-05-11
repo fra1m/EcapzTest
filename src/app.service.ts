@@ -18,13 +18,13 @@ interface PaymentData {
   success_url: any;
   failure_url: any;
   ip: string;
-  signature?: string; // Опциональное свойство
+  signature?: string;
 }
 
 interface TransactionData {
   project: string;
   payment_id: string;
-  signature?: string; // Опциональное свойство
+  signature?: string;
 }
 
 @Injectable()
