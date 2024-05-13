@@ -6,7 +6,7 @@ import axios from 'axios';
 import * as Interfaces from './interfaces/interfaces';
 
 @Injectable()
-export class InvoicesService {
+export class P2P_TransactionsService {
   constructor(private configService: ConfigService) {}
 
   #secret = this.configService.get('Secret');
@@ -17,7 +17,7 @@ export class InvoicesService {
   #name = this.configService.get('DnsName');
 
   // FIXME: Использовал приватную переменную для айди платежа, можно вообще было Redis использовать
-  #invoice_id = '';
+  #p2p_id = '';
 
   async createSignature(request: any, keyHex: string) {
     const values = Object.values(request);
@@ -28,21 +28,15 @@ export class InvoicesService {
     return hmacObj.digest('hex');
   }
 
-  async newInvoice() {
+  async newP2P() {
     try {
-      const data: Interfaces.InvoiceData = {
+      const data: Interfaces.P2PData = {
         project: this.#project,
         order_id: '1234123412356',
         price: '6.00',
         currency: 'USD',
-        description: 'live test payment',
-        user_name: this.#name,
-        user_phone: '5555555555',
-        user_contact_email: this.#email,
-        ip: '1.1.1.1',
         result_url: this.#result_url,
-        success_url: `https://example.com/success`,
-        failure_url: this.#result_url,
+        redirect_url: this.#result_url,
       };
 
       data.signature = await this.createSignature(data, this.#secret);
@@ -50,35 +44,36 @@ export class InvoicesService {
       const config = {
         method: 'post',
         maxBodyLength: Infinity,
-        url: `https://${this.#domein}/dev/invoices`,
+        url: `https://${this.#domein}/dev/p2p/initiate`,
         headers: {},
         data: data,
       };
 
       const data$ = await axios(config)
         .then(async (data$) => {
-          console.log(data$.data.payment_url);
-          return data$.data.invoice_id;
+          console.log(data$.data);
+          return data$.data;
         })
         .catch(function (error) {
           console.log(error.response.data);
         });
 
-      this.#invoice_id = data$.invoice_id;
+      this.#p2p_id = data$.p2p_id;
 
-      return data$;
+      return JSON.stringify(data$.form_url);
     } catch (error) {
       console.log(error);
       return error;
     }
   }
 
-  async getStatusInvoice(invoiceId: string, secret?: string) {
-    const invoice_id = invoiceId ?? this.#invoice_id;
-    console.log(invoice_id);
+  async getStatusTransaction(paymentId?: string, secret?: string) {
+    const p2p_id = paymentId ?? this.#p2p_id;
 
-    const data: Interfaces.InvoiceStatusData = {
-      invoice_id,
+    console.log(p2p_id);
+
+    const data: Interfaces.P2P_StatusData = {
+      p2p_id,
       project: this.#project,
     };
 
@@ -87,7 +82,7 @@ export class InvoicesService {
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: `https://${this.#domein}/dev/invoices/status`,
+      url: `https://${this.#domein}/dev/p2p/transaction/status`,
       headers: {},
       data: data,
     };
@@ -97,7 +92,7 @@ export class InvoicesService {
         return response.data;
       })
       .catch(function (error) {
-        console.log(error);
+        console.log(error.response.data);
       });
   }
 }

@@ -65,6 +65,12 @@ export class CallbackService {
           this.#secret,
         );
         break;
+      case !!data.p2p_id:
+        status = await this.invoicesService.getStatusInvoice(
+          data.p2p_id,
+          this.#secret,
+        );
+        break;
       default:
         throw new HttpException('Bad body', HttpStatus.BAD_REQUEST);
     }

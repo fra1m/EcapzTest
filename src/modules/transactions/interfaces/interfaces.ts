@@ -1,4 +1,4 @@
-export interface PaymentData {
+export interface TransactionData {
   project: any;
   card_token: string;
   user_contact_email: any;

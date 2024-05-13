@@ -52,7 +52,7 @@ export class TransactionService {
     try {
       const card = await this.getCardToken(this.#project);
 
-      const data: Interfaces.PaymentData = {
+      const data: Interfaces.TransactionData = {
         project: this.#project,
         card_token: card.id,
         order_id: '1234123412356',

@@ -9,9 +9,4 @@ export class InvoicesController {
   getACSUrl() {
     return this.invoicesService.newInvoice();
   }
-
-  @Get('/wtf')
-  wtf() {
-    return { status: 200 };
-  }
 }
