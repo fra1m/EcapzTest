@@ -1,36 +1,15 @@
-import { HttpService } from '@nestjs/axios';
+// import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import axios from 'axios';
 
-interface PaymentData {
-  project: any;
-  card_token: string;
-  user_contact_email: any;
-  user_name: any;
-  description: string;
-  price: string;
-  currency: string;
-  order_id: string;
-  user_phone: string;
-  result_url: any;
-  success_url: any;
-  failure_url: any;
-  ip: string;
-  signature?: string;
-}
-
-interface TransactionData {
-  project: string;
-  payment_id: string;
-  signature?: string;
-}
+import * as Interfaces from './interfaces/interfaces';
 
 @Injectable()
-export class AppService {
+export class TransactionService {
   constructor(
-    private httpService: HttpService,
+    // private httpService: HttpService,
     private configService: ConfigService,
   ) {}
 
@@ -67,7 +46,6 @@ export class AppService {
   async createSignature(request: any, keyHex: string) {
     const values = Object.values(request);
     const hmacData = values.sort().join('|');
-    console.log(hmacData);
     const hmacKey = Buffer.from(keyHex, 'hex');
     const hmacObj = crypto.createHmac('sha256', hmacKey);
     hmacObj.update(hmacData);
@@ -78,7 +56,7 @@ export class AppService {
     try {
       const card = await this.getCardToken(this.#project);
 
-      const data: PaymentData = {
+      const data: Interfaces.PaymentData = {
         project: this.#project,
         card_token: card.id,
         order_id: '1234123412356',
@@ -104,18 +82,18 @@ export class AppService {
         data: data,
       };
 
-      const payment_id = await axios(config)
+      const data$ = await axios(config)
         .then(async (data$) => {
           console.log(data$.data);
-          return data$.data.payment_id;
+          return data$.data;
         })
         .catch(function (error) {
           console.log(error.response.data);
         });
 
-      this.#payment_id = payment_id;
+      this.#payment_id = data$.payment_id;
 
-      return payment_id;
+      return data$.acs.url;
     } catch (error) {
       console.log(error);
       return error;
@@ -127,12 +105,12 @@ export class AppService {
 
     console.log(payment_id);
 
-    const data: TransactionData = {
+    const data: Interfaces.TransactionStatusData = {
       payment_id,
       project: this.#project,
     };
 
-    data.signature = await this.createSignature(data, this.#secret);
+    data.signature = await this.createSignature(data, secret);
 
     const config = {
       method: 'post',
@@ -144,11 +122,64 @@ export class AppService {
 
     return await axios(config)
       .then(function (response) {
-        console.log(JSON.stringify(response.data));
         return response.data;
       })
       .catch(function (error) {
         console.log(error.response.data);
+      });
+  }
+
+  async rufundTransaction(payment_id: string) {
+    const data: Interfaces.RefundTransactionData = {
+      payment_id,
+      project: this.#project,
+      result_url: this.#result_url,
+    };
+
+    data.signature = await this.createSignature(data, this.#secret);
+
+    const config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: `https://${this.#domein}/dev/transaction/refund`,
+      headers: {},
+      data: data,
+    };
+
+    return await axios(config)
+      .then((data) => {
+        return data.data;
+      })
+      .catch(function (error) {
+        console.log(error.response);
+        return error.message;
+      });
+  }
+
+  async getRefundStatusTransaction(refund_id: string, secret?: string) {
+    console.log(refund_id);
+
+    const data: Interfaces.RefundTransactionStatusData = {
+      refund_id,
+      project: this.#project,
+    };
+
+    data.signature = await this.createSignature(data, secret);
+
+    const config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: `https://${this.#domein}/dev/transaction/refund/status`,
+      headers: {},
+      data: data,
+    };
+
+    return await axios(config)
+      .then(function (response) {
+        return response.data;
+      })
+      .catch(function (error) {
+        console.log(error);
       });
   }
 }

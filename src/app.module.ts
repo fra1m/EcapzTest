@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
+import { TransactionModule } from '@modules/transactions/transactions.module';
+import { InvoicesModule } from '@modules/invoices/invoices.module';
 
 @Module({
   imports: [
@@ -10,9 +9,10 @@ import { HttpModule } from '@nestjs/axios';
       isGlobal: true,
       envFilePath: './.env',
     }),
-    HttpModule,
+    TransactionModule,
+    InvoicesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
