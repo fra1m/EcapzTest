@@ -1,4 +1,3 @@
-// import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -8,10 +7,7 @@ import * as Interfaces from './interfaces/interfaces';
 
 @Injectable()
 export class TransactionService {
-  constructor(
-    // private httpService: HttpService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private configService: ConfigService) {}
 
   #secret = this.configService.get('Secret');
   #project = this.configService.get('Project');
